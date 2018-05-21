@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "test": "jest --no-cache"
+    "test": "jest"
   },
   "dependencies": {
     "jest": "21.2.1"
