@@ -13,7 +13,6 @@ function classifier(input) {
 	var students = [];
 	var ages = [];
 	var groups = {};
-	var ages = [];
 	var organizedGroups = {};
 	var noOfGroups = '';
 
@@ -38,81 +37,71 @@ function classifier(input) {
 	});
 
 	//sort members
-	var unsortedStudentsBucket = [];
 	var sortedStudentsBucket = [];
-	var counter = 1;
+	var ageCounter = {};
+	var counter = 1 ;
 
 	var minAge = Math.min(...ages);
 	var maxAge = Math.max(...ages);
 
-	for(var i=minAge; i<=(maxAge*2); i+=5){
+	for(var i=minAge, j=0; i<=(maxAge+5); i+=5){
 		students.forEach((student)=>{
 			//Check if the student satisfies the condition for age difference being less than 5
 			if(Math.abs(i - student.age) <= 5){
 				//Check if the student has been sorted
 				if(sortedStudentsBucket.indexOf(student.regNo) < 0 ){
-
 					//Check if the group exists 
 					if(! groups.hasOwnProperty([counter])){
 						i = student.age;
 						groups[counter] = {
-							members: []
+							members: [],
+							sum: 0,
+							regNos: [],
+							oldest: 0
 						}
 						groups[counter].members.push(student);
 						sortedStudentsBucket.push(student.regNo);
+
+						//Handle metadata
+						ageCounter[counter] = [];
+						ageCounter[counter].push(student.age)
+						groups[counter].sum+=student.age
+						var integerRegNo = parseInt(student.regNo);
+						groups[counter].regNos.push(integerRegNo);
+						groups[counter].oldest = student.age
+
+						//We increment j to indicate a new group being created
+						j=j+1;
+						organizedGroups['group'+j] = groups[counter]
 					}
 					else {
 						//Check if the bucket is full
 						if(groups[counter].members.length !== 3 ){
 							groups[counter].members.push(student);
 							sortedStudentsBucket.push(student.regNo);	
-						}
+
+							//Handle Metadata
+							ageCounter[counter].push(student.age)
+							groups[counter].sum+=student.age
+							var integerRegNo = parseInt(student.regNo);
+							groups[counter].regNos.push(integerRegNo);
+
+							var oldest = Math.max(...ageCounter[counter]);
+							groups[counter].oldest = oldest;
+							groups[counter].regNos.sort((a,b)=>{
+								return a-b;
+							});
+
+							organizedGroups['group'+j] = groups[counter]
+						} 
 					}
 				}
 			}
-		});
+		});	
 		counter++;
 	}
-
-
-	//Rename Group	
-	var j = 1;
-	var keys = Object.keys(groups)
-
-	keys.forEach((key)=>{
-		organizedGroups['group'+j] = groups[key];
-		j++;
-	});
-
-
-	//Get Group Metadata
-	var keys = Object.keys(organizedGroups);
-
-	keys.forEach((key)=>{
-		var ages = [];
-		var sum = 0;
-		var regNos = [];
-		organizedGroups[key].members.forEach((member, index)=>{
-			ages.push(member.age);
-			sum+=member.age;
-			var integerRegNo = parseInt(member.regNo);
-			regNos.push(integerRegNo);
-		});
-
-		var oldest = Math.max(...ages);
-		organizedGroups[key].oldest = oldest;
-		organizedGroups[key].sum = sum;
-		organizedGroups[key].regNos = regNos;
-		organizedGroups[key].regNos.sort((a,b)=>{
-			return a-b;
-		});
-	});
-	noOfGroups = keys.length;
-
-	//Finalize
-	var finalData = organizedGroups;
-	finalData.noOfGroups = noOfGroups;
-	return finalData;
+	organizedGroups.noOfGroups = j
+	return organizedGroups;
 }
 
 module.exports = classifier;
